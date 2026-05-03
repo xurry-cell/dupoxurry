@@ -16,37 +16,23 @@ import {
   serverTimestamp,
   getDocFromServer
 } from 'firebase/firestore';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music, LogOut } from 'lucide-react';
-import { db, auth } from './lib/firebase';
+import { Plus, Heart, Search, Music } from 'lucide-react';
+import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
 import AtmosphericBackground from './components/Background';
 import { MemoryCard } from './components/MemoryCard';
 import MemoryForm from './components/MemoryForm';
 import MemoryDetail from './components/MemoryDetail';
-import Login from './components/Login';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
-  const [authChecking, setAuthChecking] = useState(true);
-  const [loginError, setLoginError] = useState('');
   const [memories, setMemories] = useState<DateMemory[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMemory, setEditingMemory] = useState<DateMemory | null>(null);
   const [viewingMemory, setViewingMemory] = useState<DateMemory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Auth synchronization
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthChecking(false);
-    });
-    return unsubscribe;
-  }, []);
 
   // 1. Connection Test
   useEffect(() => {
@@ -65,11 +51,6 @@ export default function App() {
 
   // 2. Data Synchronization
   useEffect(() => {
-    if (!user) {
-      setMemories([]);
-      return;
-    }
-
     const path = 'memories';
     const q = query(
       collection(db, path),
@@ -87,21 +68,7 @@ export default function App() {
     });
 
     return unsubscribe;
-  }, [user]);
-
-  const handleLogin = async () => {
-    try {
-      setLoginError('');
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error: any) {
-      setLoginError(error.message || 'Lỗi đăng nhập');
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
+  }, []);
 
   const handleSubmitMemory = async (data: { 
     title: string; 
@@ -110,7 +77,6 @@ export default function App() {
     mediaType: MediaType;
     musicUrl?: string;
   }) => {
-    if (!user) return;
     const path = 'memories';
     try {
       if (editingMemory && editingMemory.id) {
@@ -121,7 +87,7 @@ export default function App() {
       } else {
         await addDoc(collection(db, path), {
           ...data,
-          userId: user.uid,
+          userId: 'guest-user',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -158,7 +124,7 @@ export default function App() {
 
   const latestMemoryWithMusic = memories.find(m => m.musicUrl);
 
-  if (loading || authChecking) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <motion.div
@@ -169,10 +135,6 @@ export default function App() {
         </motion.div>
       </div>
     );
-  }
-
-  if (!user) {
-    return <Login onLogin={handleLogin} error={loginError} />;
   }
 
   return (
@@ -208,14 +170,6 @@ export default function App() {
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Thêm buổi hẹn</span>
-            </button>
-
-            <button 
-              onClick={handleLogout}
-              className="w-10 h-10 rounded-full bg-bento-card border border-bento-border text-bento-muted hover:text-bento-text flex items-center justify-center transition-colors"
-              title="Đăng xuất"
-            >
-              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>

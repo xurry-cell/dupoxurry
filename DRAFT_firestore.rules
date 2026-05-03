@@ -11,7 +11,6 @@ service cloud.firestore {
     
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
-    function isSignedIn() { return request.auth != null; }
 
     function isValidMemory(incomingData) {
       return incomingData.keys().hasAll(['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt']) &&
@@ -20,7 +19,7 @@ service cloud.firestore {
         incomingData.mediaUrls is list && incomingData.mediaUrls.size() <= 20 &&
         (incomingData.mediaUrls.size() == 0 || incomingData.mediaUrls[0] is string) &&
         incomingData.mediaType is string && incomingData.mediaType.matches('^(image|video)$') &&
-        incomingData.userId == request.auth.uid &&
+        incomingData.userId == 'guest-user' &&
         incomingData.createdAt is timestamp &&
         (
           !('musicUrl' in incomingData) || 
@@ -46,22 +45,22 @@ service cloud.firestore {
     }
     
     match /memories/{memoryId} {
-      allow get: if isSignedIn() && isValidId(memoryId) && existing().userId == request.auth.uid;
-      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow get: if isValidId(memoryId);
+      allow list: if true;
       
-      allow create: if isSignedIn() && isValidId(memoryId) &&
+      allow create: if isValidId(memoryId) &&
         isValidMemory(incoming()) &&
         hasValidCreateKeys(incoming()) &&
         incoming().createdAt == request.time;
         
-      allow update: if isSignedIn() && isValidId(memoryId) && existing().userId == request.auth.uid &&
+      allow update: if isValidId(memoryId) &&
         isValidMemory(incoming()) &&
         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'date', 'mediaUrls', 'mediaType', 'musicUrl', 'updatedAt']) &&
         incoming().userId == existing().userId &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time;
         
-      allow delete: if isSignedIn() && isValidId(memoryId) && existing().userId == request.auth.uid;
+      allow delete: if isValidId(memoryId) && existing().userId == 'guest-user';
     }
   }
 }

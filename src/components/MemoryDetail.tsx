@@ -42,7 +42,7 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
   if (!memory) return null;
 
   return (
-    <AnimatePresence>
+    <>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -156,43 +156,43 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
             </div>
           </div>
         </motion.div>
+      </motion.div>
 
-        {/* Fullscreen Image Viewer Modal */}
-        <AnimatePresence>
-          {selectedImage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
+      {/* Fullscreen Image Viewer Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImage(null);
+            }}
+          >
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedImage(null);
               }}
+              className="absolute top-4 right-4 md:top-8 md:right-8 z-[130] p-3 md:p-4 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all"
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedImage(null);
-                }}
-                className="absolute top-4 right-4 md:top-8 md:right-8 z-[130] p-3 md:p-4 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all"
-              >
-                <X className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-              <motion.img
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                src={selectedImage}
-                alt="Full size view"
-                className="max-w-full max-h-[90vh] object-contain rounded-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </AnimatePresence>
+              <X className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              src={selectedImage}
+              alt="Full size view"
+              className="max-w-full max-h-[90vh] object-contain rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

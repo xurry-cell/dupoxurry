@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    function isValidMemory(incomingData) {
+      return incomingData.keys().hasAll(['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt']) &&
+        incomingData.title is string && incomingData.title.size() <= 200 &&
+        incomingData.date is string && incomingData.date.size() <= 50 &&
+        incomingData.mediaUrls is list && incomingData.mediaUrls.size() <= 20 &&
+        (incomingData.mediaUrls.size() == 0 || incomingData.mediaUrls[0] is string) &&
+        incomingData.mediaType is string && incomingData.mediaType.matches('^(image|video)$') &&
+        incomingData.userId == request.auth.uid &&
+        incomingData.createdAt is timestamp &&
+        (
+          !('musicUrl' in incomingData) || 
+          (incomingData.musicUrl is string && incomingData.musicUrl.size() <= 1000)
+        ) &&
+        (
+          !('updatedAt' in incomingData) || 
+          (incomingData.updatedAt is timestamp)
+        );
+    }
+    
+    function hasValidCreateKeys(incomingData) {
+      let baseKeys = ['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt'];
+      let isMusicSent = 'musicUrl' in incomingData;
+      let isUpdatedAtSent = 'updatedAt' in incomingData;
+      let expectedSize = 6 + (isMusicSent ? 1 : 0) + (isUpdatedAtSent ? 1 : 0);
+      
+      return incomingData.keys().hasAll(baseKeys) && incomingData.keys().size() == expectedSize;
+    }
+    
+    match /system/{doc} {
+      allow get: if true;
+    }
+    
+    match /memories/{memoryId} {
+      allow get: if isSignedIn() && isValidId(memoryId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && isValidId(memoryId) &&
+        isValidMemory(incoming()) &&
+        hasValidCreateKeys(incoming()) &&
+        incoming().createdAt == request.time;
+        
+      allow update: if isSignedIn() && isValidId(memoryId) && existing().userId == request.auth.uid &&
+        isValidMemory(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'date', 'mediaUrls', 'mediaType', 'musicUrl', 'updatedAt']) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time;
+        
+      allow delete: if isSignedIn() && isValidId(memoryId) && existing().userId == request.auth.uid;
+    }
+  }
+}

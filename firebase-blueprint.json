@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "Memory": {
+      "title": "Date Memory",
+      "description": "A memory of a date including title, date, media URLs, and optional music.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the date."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the memory."
+        },
+        "mediaUrls": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of URLs for photos or videos."
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video"],
+          "description": "Primary type of media stored."
+        },
+        "musicUrl": {
+          "type": "string",
+          "description": "Optional URL for the background music."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this memory."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the record was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the record was last updated."
+        }
+      },
+      "required": ["title", "date", "mediaUrls", "mediaType", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "memories": {
+      "schema": "Memory",
+      "description": "Collection of all date memories."
+    }
+  }
+}

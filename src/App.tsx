@@ -17,7 +17,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music } from 'lucide-react';
+import { Plus, Heart, Search, Music, ArrowUpDown } from 'lucide-react';
 import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
@@ -33,6 +33,7 @@ export default function App() {
   const [editingMemory, setEditingMemory] = useState<DateMemory | null>(null);
   const [viewingMemory, setViewingMemory] = useState<DateMemory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // 1. Connection Test
   useEffect(() => {
@@ -118,9 +119,13 @@ export default function App() {
     setIsFormOpen(true);
   };
 
-  const filteredMemories = memories.filter(m => 
-    m.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMemories = memories
+    .filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
 
   const latestMemoryWithMusic = memories.find(m => m.musicUrl);
 
@@ -177,8 +182,8 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-6 pt-32 pb-24">
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-          <div>
+        <header className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 gap-8 text-center md:text-left">
+          <div className="flex flex-col items-center md:items-start">
             <motion.p 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -192,7 +197,7 @@ export default function App() {
               transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
               className="text-6xl md:text-7xl font-serif italic text-bento-text leading-tight"
             >
-              Nhật Ký <br />
+              Nhật Ký <br className="hidden md:block" />
               <span className="text-bento-muted">Hẹn Hò</span>
             </motion.h2>
           </div>
@@ -201,50 +206,49 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-right"
+            className="flex flex-col items-center md:items-end"
           >
             <div className="text-5xl font-light text-bento-accent">{memories.length} Kỉ Niệm</div>
-            <div className="text-[10px] uppercase tracking-widest text-bento-muted font-bold mt-1">
+            <div className="text-[10px] uppercase tracking-widest text-bento-muted font-bold mt-2">
               Lưu giữ từng khoảnh khắc ngọt ngào
             </div>
+            {memories.length > 0 && (
+              <button
+                onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                className="mt-6 flex items-center gap-2 text-xs uppercase tracking-widest font-bold bg-bento-card text-bento-accent border border-bento-border px-4 py-2 rounded-full hover:bg-bento-border transition-colors cursor-pointer"
+              >
+                <ArrowUpDown className="w-3 h-3" />
+                Sắp xếp: {sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}
+              </button>
+            )}
           </motion.div>
         </header>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Welcome Card (Static Content for Bento Style) */}
           <motion.div 
             layout
-            className="md:col-span-2 row-span-1 bg-bento-accent rounded-[32px] p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden"
+            className="sm:col-span-2 row-span-1 bg-bento-accent rounded-[32px] p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden"
           >
              <div className="relative z-10">
                <div className="text-[10px] uppercase tracking-widest font-bold text-bento-bg/50 mb-2">Welcome</div>
                <h3 className="text-3xl font-serif text-bento-bg italic">Giai điệu của chúng mình</h3>
                <p className="text-sm text-bento-bg/80 mt-2 max-w-sm">Mỗi buổi hẹn hò là một nốt nhạc trong bản tình ca mà chúng mình đang cùng nhau viết nên.</p>
              </div>
-             <div className="flex items-center gap-4 mt-8 relative z-10">
-                <div className="w-12 h-12 bg-bento-bg rounded-2xl flex items-center justify-center text-bento-accent text-xl">♫</div>
-                <div>
-                  <div className="text-sm font-bold text-bento-bg">
+             <div className="flex items-center gap-4 mt-8 lg:mt-12 relative z-10">
+                <div className="w-12 h-12 bg-bento-bg rounded-2xl flex-shrink-0 flex items-center justify-center text-bento-accent text-xl">♫</div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-bento-bg truncate">
                     {latestMemoryWithMusic ? latestMemoryWithMusic.title : 'Perfect - Ed Sheeran'}
                   </div>
-                  <div className="text-[10px] text-bento-bg/70 uppercase tracking-widest font-bold">
+                  <div className="text-[10px] text-bento-bg/70 uppercase tracking-widest font-bold truncate">
                     {latestMemoryWithMusic ? `Từ kỉ niệm: ${latestMemoryWithMusic.date}` : 'Đang phát từ buổi hẹn đầu tiên'}
                   </div>
                 </div>
              </div>
              {/* Decorative hearts */}
              <Heart className="absolute -bottom-10 -right-10 w-48 h-48 text-bento-bg/10 rotate-12" />
-          </motion.div>
-
-          {/* New Memory Quick Add (Visible only when no memories or as a curated spot) */}
-          <motion.div 
-            layout
-            onClick={openNewForm}
-            className="col-span-1 row-span-1 bg-bento-border text-bento-text rounded-[32px] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-bento-card transition-all shadow-lg active:scale-95 border border-bento-border"
-          >
-            <div className="w-16 h-16 rounded-full border border-bento-accent text-bento-accent flex items-center justify-center text-3xl mb-4 group-hover:bg-bento-accent group-hover:text-bento-bg transition-all">+</div>
-            <span className="text-sm font-bold uppercase tracking-[0.2em] text-bento-accent">Thêm buổi hẹn</span>
           </motion.div>
 
           <AnimatePresence mode="popLayout">
@@ -278,16 +282,6 @@ export default function App() {
           )}
         </div>
       </main>
-
-      {/* Floating Action Button for Mobile */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={openNewForm}
-        className="fixed bottom-8 right-8 sm:hidden z-50 w-16 h-16 bg-bento-accent text-bento-bg rounded-full shadow-2xl flex items-center justify-center"
-      >
-        <Plus className="w-8 h-8" />
-      </motion.button>
 
       <MemoryForm 
         isOpen={isFormOpen} 

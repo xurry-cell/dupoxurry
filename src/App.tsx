@@ -156,25 +156,25 @@ export default function App() {
             <span className="text-xl font-serif italic tracking-tight text-bento-text">Dupo Xurry</span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center bg-bento-card border border-bento-border rounded-full px-4 py-2 group focus-within:border-bento-muted/30 transition-all shadow-sm">
-              <Search className="w-4 h-4 text-bento-muted" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center bg-bento-card border border-bento-border rounded-full px-2 sm:px-4 py-1 sm:py-2 group focus-within:border-bento-muted/30 transition-all shadow-sm">
+              <Search className="w-3 h-3 sm:w-4 sm:h-4 text-bento-muted" />
               <input 
                 type="text" 
-                placeholder="Tìm kiếm kỉ niệm..."
+                placeholder="Tìm kiếm..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none focus:outline-none text-sm px-3 w-48 text-bento-text placeholder:text-bento-muted"
+                className="bg-transparent border-none focus:outline-none text-xs sm:text-sm px-2 w-24 sm:w-48 text-bento-text placeholder:text-bento-muted"
               />
             </div>
 
             <button 
               onClick={openNewForm}
-              className="group flex items-center gap-2 text-xs uppercase tracking-widest font-bold bg-bento-accent text-bento-bg px-6 py-3 rounded-full hover:brightness-110 transition-all shadow-sm"
+              className="group flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs uppercase tracking-widest font-bold bg-bento-accent text-bento-bg px-3 sm:px-6 py-2 sm:py-3 rounded-full hover:brightness-110 transition-all shadow-sm"
               id="add-memory-nav"
             >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Thêm buổi hẹn</span>
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Thêm hẹn</span>
             </button>
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               className="text-xs tracking-[0.4em] uppercase text-bento-muted font-bold mb-3"
             >
-              Our Story
+              bro to lover
             </motion.p>
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
@@ -197,8 +197,8 @@ export default function App() {
               transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
               className="text-6xl md:text-7xl font-serif italic text-bento-text leading-tight"
             >
-              Nhật Ký <br className="hidden md:block" />
-              <span className="text-bento-muted">Hẹn Hò</span>
+              Dating <br className="hidden md:block" />
+              <span className="text-bento-muted">Saved</span>
             </motion.h2>
           </div>
           
@@ -210,7 +210,7 @@ export default function App() {
           >
             <div className="text-5xl font-light text-bento-accent">{memories.length} Kỉ Niệm</div>
             <div className="text-[10px] uppercase tracking-widest text-bento-muted font-bold mt-2">
-              Lưu giữ từng khoảnh khắc ngọt ngào
+              lộn số rầu
             </div>
             {memories.length > 0 && (
               <button
@@ -232,9 +232,9 @@ export default function App() {
             className="sm:col-span-2 row-span-1 bg-bento-accent rounded-[32px] p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden"
           >
              <div className="relative z-10">
-               <div className="text-[10px] uppercase tracking-widest font-bold text-bento-bg/50 mb-2">Welcome</div>
-               <h3 className="text-3xl font-serif text-bento-bg italic">Giai điệu của chúng mình</h3>
-               <p className="text-sm text-bento-bg/80 mt-2 max-w-sm">Mỗi buổi hẹn hò là một nốt nhạc trong bản tình ca mà chúng mình đang cùng nhau viết nên.</p>
+               <div className="text-[10px] uppercase tracking-widest font-bold text-bento-bg/50 mb-2">có lẽ anh không muốn đợi... anh muốn bên em</div>
+               <h3 className="text-3xl font-serif text-bento-bg italic">Duy Anh và Xuân Nhi</h3>
+               <p className="text-sm text-bento-bg/80 mt-2 max-w-sm">từ giờ có anh rồi, những điều em thích làm nhớ để anh có mặt ở đấy cùng nhá</p>
              </div>
              <div className="flex items-center gap-4 mt-8 lg:mt-12 relative z-10">
                 <div className="w-12 h-12 bg-bento-bg rounded-2xl flex-shrink-0 flex items-center justify-center text-bento-accent text-xl">♫</div>

@@ -15,6 +15,7 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
   const [photos, setPhotos] = useState<PersonalPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -128,7 +129,8 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="break-inside-avoid mb-6 bg-bento-card rounded-2xl overflow-hidden border border-bento-border shadow-sm group relative"
+                className="break-inside-avoid mb-6 bg-bento-card rounded-2xl overflow-hidden border border-bento-border shadow-sm group relative cursor-pointer"
+                onClick={() => setSelectedPhoto(photo.imageUrl)}
               >
                 <img 
                   src={photo.imageUrl} 
@@ -136,7 +138,10 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
                   className="w-full object-cover"
                 />
                 <button
-                  onClick={() => photo.id && handleDelete(photo.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (photo.id) handleDelete(photo.id);
+                  }}
                   className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -151,6 +156,37 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Image Viewer Modal */}
+      <AnimatePresence>
+        {selectedPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <button
+              onClick={() => setSelectedPhoto(null)}
+              className="absolute top-4 right-4 md:top-8 md:right-8 z-[110] p-3 md:p-4 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md transition-all"
+            >
+              <Trash2 className="w-5 h-5 md:w-6 md:h-6 hidden" /> {/* Placeholder just to align with other styles or we can use X, I'll use X */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 md:w-6 md:h-6"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              src={selectedPhoto}
+              alt="Full size view"
+              className="max-w-full max-h-[90vh] object-contain rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

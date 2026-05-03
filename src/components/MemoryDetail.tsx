@@ -13,6 +13,7 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isMuted, setIsMuted] = React.useState(false);
   const [volume, setVolume] = React.useState(1);
+  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
   // Reset state when a new memory opens
@@ -147,13 +148,50 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
                      key={i}
                      src={url}
                      alt={`${memory.title} - ${i}`}
-                     className={`max-w-full h-auto rounded-3xl object-contain object-center max-h-[85vh] mx-auto ${memory.mediaUrls.length === 1 ? 'md:col-span-2' : ''}`}
+                     onClick={() => setSelectedImage(url)}
+                     className={`max-w-full h-auto rounded-3xl object-contain object-center max-h-[85vh] mx-auto cursor-pointer transition-transform hover:scale-[1.02] ${memory.mediaUrls.length === 1 ? 'md:col-span-2' : ''}`}
                    />
                  ))
                )}
             </div>
           </div>
         </motion.div>
+
+        {/* Fullscreen Image Viewer Modal */}
+        <AnimatePresence>
+          {selectedImage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImage(null);
+              }}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedImage(null);
+                }}
+                className="absolute top-4 right-4 md:top-8 md:right-8 z-[130] p-3 md:p-4 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all"
+              >
+                <X className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+              <motion.img
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                src={selectedImage}
+                alt="Full size view"
+                className="max-w-full max-h-[90vh] object-contain rounded-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

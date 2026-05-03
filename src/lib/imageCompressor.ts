@@ -1,4 +1,4 @@
-export const compressImage = (file: File, maxSize: number = 800): Promise<string> => {
+export const compressImage = (file: File, maxSize: number = 1200): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -32,8 +32,8 @@ export const compressImage = (file: File, maxSize: number = 800): Promise<string
         
         ctx.drawImage(img, 0, 0, width, height);
         
-        // JPEG format with 0.6 quality gives good compression
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
+        // WebP format gives better compression and quality compared to JPEG
+        resolve(canvas.toDataURL('image/webp', 0.85));
       };
       img.onerror = () => reject(new Error('Failed to load image'));
     };

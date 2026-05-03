@@ -17,7 +17,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music, ArrowUpDown } from 'lucide-react';
+import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon } from 'lucide-react';
 import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
@@ -25,6 +25,11 @@ import AtmosphericBackground from './components/Background';
 import { MemoryCard } from './components/MemoryCard';
 import MemoryForm from './components/MemoryForm';
 import MemoryDetail from './components/MemoryDetail';
+import PhotoGrid from './components/PhotoGrid';
+import ProfileCover from './components/ProfileCover';
+import { compressImage } from './lib/imageCompressor';
+
+type TabType = 'memories' | 'dupo' | 'xurry';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -34,6 +39,7 @@ export default function App() {
   const [viewingMemory, setViewingMemory] = useState<DateMemory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [activeTab, setActiveTab] = useState<TabType>('memories');
 
   // 1. Connection Test
   useEffect(() => {
@@ -147,7 +153,7 @@ export default function App() {
       <AtmosphericBackground />
       
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-8">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-8 bg-bento-bg/80 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none border-b border-bento-border/50 sm:border-none duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-bento-card rounded-2xl flex items-center justify-center shadow-sm border border-bento-border text-bento-accent">
@@ -180,14 +186,14 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 pt-32 pb-24">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-24">
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 gap-8 text-center md:text-left">
+        <header className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 md:mb-12 gap-6 md:gap-8 text-center md:text-left">
           <div className="flex flex-col items-center md:items-start">
             <motion.p 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-xs tracking-[0.4em] uppercase text-bento-muted font-bold mb-3"
+              className="text-[10px] sm:text-xs tracking-[0.4em] uppercase text-bento-muted font-bold mb-3"
             >
               bro to lover
             </motion.p>
@@ -195,7 +201,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
-              className="text-6xl md:text-7xl font-serif italic text-bento-text leading-tight"
+              className="text-5xl sm:text-6xl md:text-7xl font-serif italic text-bento-text leading-tight"
             >
               Dating <br className="hidden md:block" />
               <span className="text-bento-muted">Saved</span>
@@ -206,13 +212,13 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col items-center md:items-end"
+            className="flex flex-col items-center md:items-end mt-4 md:mt-0"
           >
-            <div className="text-5xl font-light text-bento-accent">{memories.length} Kỉ Niệm</div>
+            <div className="text-4xl sm:text-5xl font-light text-bento-accent">{memories.length} Kỉ Niệm</div>
             <div className="text-[10px] uppercase tracking-widest text-bento-muted font-bold mt-2">
               lộn số rầu
             </div>
-            {memories.length > 0 && (
+            {memories.length > 0 && activeTab === 'memories' && (
               <button
                 onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
                 className="mt-6 flex items-center gap-2 text-xs uppercase tracking-widest font-bold bg-bento-card text-bento-accent border border-bento-border px-4 py-2 rounded-full hover:bg-bento-border transition-colors cursor-pointer"
@@ -224,20 +230,44 @@ export default function App() {
           </motion.div>
         </header>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Tab Navigation */}
+        <div className="flex justify-start md:justify-start gap-3 sm:gap-4 mb-8 sm:mb-12 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          {(['memories', 'dupo', 'xurry'] as TabType[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap border
+                ${activeTab === tab 
+                  ? 'bg-bento-accent text-bento-bg border-bento-accent' 
+                  : 'bg-bento-card text-bento-muted border-bento-border hover:border-bento-accent/50 hover:text-bento-text'
+                }
+              `}
+            >
+              {tab === 'memories' && <Heart className="w-4 h-4" />}
+              {tab === 'dupo' && <ImageIcon className="w-4 h-4" />}
+              {tab === 'xurry' && <ImageIcon className="w-4 h-4" />}
+              {tab === 'memories' ? 'Kỉ niệm chung' : tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Main Content Area */}
+        {activeTab === 'memories' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Welcome Card (Static Content for Bento Style) */}
           <motion.div 
             layout
-            className="sm:col-span-2 row-span-1 bg-bento-accent rounded-[32px] p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden"
+            className="sm:col-span-2 row-span-1 bg-bento-accent rounded-[32px] p-6 sm:p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden"
           >
              <div className="relative z-10">
                <div className="text-[10px] uppercase tracking-widest font-bold text-bento-bg/50 mb-2">có lẽ anh không muốn đợi... anh muốn bên em</div>
-               <h3 className="text-3xl font-serif text-bento-bg italic">Duy Anh và Xuân Nhi</h3>
-               <p className="text-sm text-bento-bg/80 mt-2 max-w-sm">từ giờ có anh rồi, những điều em thích làm nhớ để anh có mặt ở đấy cùng nhá</p>
+               <h3 className="text-2xl sm:text-3xl font-serif text-bento-bg italic">Duy Anh và Xuân Nhi</h3>
+               <p className="text-xs sm:text-sm text-bento-bg/80 mt-2 max-w-sm">từ giờ có anh rồi, những điều em thích làm nhớ để anh có mặt ở đấy cùng nhá</p>
              </div>
              <div className="flex items-center gap-4 mt-8 lg:mt-12 relative z-10">
-                <div className="w-12 h-12 bg-bento-bg rounded-2xl flex-shrink-0 flex items-center justify-center text-bento-accent text-xl">♫</div>
+                <div className="w-12 h-12 bg-bento-bg rounded-2xl flex-shrink-0 flex items-center justify-center text-bento-accent">
+                  <Heart className="w-5 h-5 fill-current" />
+                </div>
                 <div className="min-w-0">
                   <div className="text-sm font-bold text-bento-bg truncate">
                     {latestMemoryWithMusic ? latestMemoryWithMusic.title : 'Perfect - Ed Sheeran'}
@@ -281,6 +311,16 @@ export default function App() {
             </motion.div>
           )}
         </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            key={activeTab}
+          >
+            <ProfileCover category={activeTab as 'dupo' | 'xurry'} />
+            <PhotoGrid category={activeTab as 'dupo' | 'xurry'} />
+          </motion.div>
+        )}
       </main>
 
       <MemoryForm 

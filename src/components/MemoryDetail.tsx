@@ -39,9 +39,9 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
       >
         <button
           onClick={onClose}
-          className="fixed top-8 right-8 z-[110] p-4 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all"
+          className="fixed top-4 right-4 md:top-8 md:right-8 z-[110] p-3 md:p-4 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md transition-all"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5 md:w-6 md:h-6" />
         </button>
 
         <motion.div

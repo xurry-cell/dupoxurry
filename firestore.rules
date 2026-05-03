@@ -30,6 +30,17 @@ service cloud.firestore {
           (incomingData.updatedAt is timestamp)
         );
     }
+
+    function isValidPersonalPhoto(incomingData) {
+      return incomingData.keys().hasAll(['category', 'imageUrl', 'createdAt']) &&
+        incomingData.category is string && incomingData.category.matches('^(dupo|xurry)$') &&
+        incomingData.imageUrl is string && incomingData.imageUrl.size() <= 1048487 &&
+        incomingData.createdAt is timestamp &&
+        (
+          !('title' in incomingData) || 
+          (incomingData.title is string && incomingData.title.size() <= 200)
+        );
+    }
     
     function hasValidCreateKeys(incomingData) {
       let baseKeys = ['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt'];
@@ -40,8 +51,36 @@ service cloud.firestore {
       return incomingData.keys().hasAll(baseKeys) && incomingData.keys().size() == expectedSize;
     }
     
+    function hasValidPhotoCreateKeys(incomingData) {
+      let baseKeys = ['category', 'imageUrl', 'createdAt'];
+      let isTitleSent = 'title' in incomingData;
+      let expectedSize = 3 + (isTitleSent ? 1 : 0);
+      return incomingData.keys().hasAll(baseKeys) && incomingData.keys().size() == expectedSize;
+    }
+
+    function isValidSettings(incomingData) {
+      return (!('dupoCover' in incomingData) || (incomingData.dupoCover is string && incomingData.dupoCover.size() <= 1048487)) &&
+             (!('xurryCover' in incomingData) || (incomingData.xurryCover is string && incomingData.xurryCover.size() <= 1048487));
+    }
+
     match /system/{doc} {
       allow get: if true;
+    }
+
+    match /settings/{docId} {
+      allow get: if true;
+      allow read, write: if true;
+    }
+    
+    match /personal_photos/{photoId} {
+      allow get: if isValidId(photoId);
+      allow list: if true;
+      allow create: if isValidId(photoId) &&
+        isValidPersonalPhoto(incoming()) &&
+        hasValidPhotoCreateKeys(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if false; // No updates for simplicity, just delete and recreate
+      allow delete: if isValidId(photoId);
     }
     
     match /memories/{memoryId} {

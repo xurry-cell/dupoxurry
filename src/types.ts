@@ -14,6 +14,19 @@ export interface DateMemory {
   updatedAt?: Timestamp;
 }
 
+export interface PersonalPhoto {
+  id?: string;
+  category: 'dupo' | 'xurry';
+  imageUrl: string;
+  title?: string;
+  createdAt: Timestamp;
+}
+
+export interface Settings {
+  dupoCover?: string;
+  xurryCover?: string;
+}
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',

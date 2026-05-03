@@ -44,12 +44,61 @@
         }
       },
       "required": ["title", "date", "mediaUrls", "mediaType", "userId", "createdAt"]
+    },
+    "PersonalPhoto": {
+      "title": "Personal Photo",
+      "description": "A personal photo of Dupo or Xurry.",
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["dupo", "xurry"],
+          "description": "Who the photo is for."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "The base64 encoded image."
+        },
+        "title": {
+          "type": "string",
+          "description": "Optional title for the photo."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the record was created."
+        }
+      },
+      "required": ["category", "imageUrl", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global settings for the application.",
+      "type": "object",
+      "properties": {
+        "dupoCover": {
+          "type": "string",
+          "description": "Cover URL for Dupo."
+        },
+        "xurryCover": {
+          "type": "string",
+          "description": "Cover URL for Xurry."
+        }
+      }
     }
   },
   "firestore": {
     "memories": {
       "schema": "Memory",
       "description": "Collection of all date memories."
+    },
+    "personal_photos": {
+      "schema": "PersonalPhoto",
+      "description": "Collection of personal photos for Dupo and Xurry."
+    },
+    "settings": {
+      "schema": "Settings",
+      "description": "Global settings for the application, like covers."
     }
   }
 }

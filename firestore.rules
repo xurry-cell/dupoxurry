@@ -23,7 +23,7 @@ service cloud.firestore {
         incomingData.createdAt is timestamp &&
         (
           !('musicUrl' in incomingData) || 
-          (incomingData.musicUrl is string && incomingData.musicUrl.size() <= 1000)
+          (incomingData.musicUrl is string && incomingData.musicUrl.size() <= 1048487)
         ) &&
         (
           !('updatedAt' in incomingData) || 

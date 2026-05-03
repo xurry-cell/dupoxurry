@@ -60,8 +60,8 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       let finalMusicUrl = musicUrl;
       
       if (musicFile) {
-        if (musicFile.size > 700 * 1024) {
-          setFileError('File nhạc quá lớn! Do sử dụng Database miễn phí nên chỉ hỗ trợ file dưới 700KB. Vui lòng chọn file ngắn hơn hoặc chuyển sang dùng link nhạc (như link google drive, mp3 link...) nhé!');
+        if (musicFile.size > 500 * 1024) {
+          setFileError('File nhạc quá lớn! Do sử dụng Database miễn phí nên chỉ hỗ trợ file dưới 500KB. Vui lòng cắt nhạc ngắn hơn (tầm 15-30s) hoặc sử dụng link nhạc gốc nhé!');
           setLoading(false);
           return;
         }
@@ -231,7 +231,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
                           <button
                             type="button"
                             onClick={() => removeMediaUrl(index)}
-                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -299,8 +299,8 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setMusicFile(file);
-                    if (file && file.size > 700 * 1024) {
-                      setFileError('File quá lớn (tối đa 700KB). Do sử dụng gói miễn phí, vui lòng chọn file nhẹ hơn hoặc dùng link nhạc.');
+                    if (file && file.size > 500 * 1024) {
+                      setFileError('File quá lớn (tối đa 500KB). Vui lòng chọn file nhẹ hơn hoặc dùng link nhạc (như Drive, Soundcloud, Zingmp3...).');
                     } else {
                       setFileError('');
                     }

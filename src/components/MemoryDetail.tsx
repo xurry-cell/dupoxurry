@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calendar, Video, Image as ImageIcon, Music, Volume2, VolumeX } from 'lucide-react';
+import { X, Calendar, Video, Image as ImageIcon, Music, Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import { DateMemory } from '../types';
 import { format } from 'date-fns';
 
@@ -10,14 +10,16 @@ interface MemoryDetailProps {
 }
 
 export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
+  const [isPlaying, setIsPlaying] = React.useState(false);
   const [isMuted, setIsMuted] = React.useState(false);
   const [volume, setVolume] = React.useState(1);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  // Reset mute state when a new memory opens
+  // Reset state when a new memory opens
   React.useEffect(() => {
     setIsMuted(false);
     setVolume(1);
+    setIsPlaying(false);
   }, [memory?.id]);
 
   React.useEffect(() => {
@@ -25,6 +27,16 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
       audioRef.current.volume = volume;
     }
   }, [volume]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(console.error);
+      }
+    }
+  };
 
   if (!memory) return null;
 
@@ -72,11 +84,11 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
                         )}
                       <div className="flex items-center gap-2 bg-bento-bg px-4 py-2 rounded-full">
                         <button
-                          onClick={() => setIsMuted(!isMuted)}
+                          onClick={togglePlay}
                           className="text-xs font-bold text-bento-text uppercase tracking-wider flex items-center gap-2 hover:opacity-80 transition-all"
                         >
-                          {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-stone-400" /> : <Volume2 className="w-4 h-4 text-bento-accent" />}
-                          {isMuted || volume === 0 ? 'Tắt âm' : 'Đang phát'}
+                          {isPlaying ? <Pause className="w-4 h-4 text-bento-accent" /> : <Play className="w-4 h-4 text-stone-400" />}
+                          {isPlaying ? 'Tạm dừng' : 'Phát nhạc'}
                         </button>
                         <input
                           type="range"
@@ -90,17 +102,26 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
                               setIsMuted(false);
                             }
                           }}
-                          className="w-20 md:w-24 h-1.5 appearance-none rounded-lg outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-bento-text [&::-webkit-slider-thumb]:rounded-full"
+                          className="w-20 md:w-24 h-1.5 appearance-none rounded-lg outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-bento-text [&::-webkit-slider-thumb]:rounded-full hidden md:block"
                           style={{
                             background: `linear-gradient(to right, var(--color-bento-accent) ${(isMuted ? 0 : volume) * 100}%, var(--color-bento-border) ${(isMuted ? 0 : volume) * 100}%)`
                           }}
                         />
+                        <button
+                          onClick={() => setIsMuted(!isMuted)}
+                          className="text-bento-text hover:opacity-80 transition-all hidden md:block"
+                        >
+                            {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        </button>
                         <audio
                           ref={audioRef}
                           src={memory.musicUrl}
                           autoPlay
+                          playsInline
                           loop
                           muted={isMuted}
+                          onPlay={() => setIsPlaying(true)}
+                          onPause={() => setIsPlaying(false)}
                           className="hidden"
                         />
                       </div>

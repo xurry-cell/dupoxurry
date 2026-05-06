@@ -269,7 +269,7 @@ export default function App() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex justify-start md:justify-start gap-3 sm:gap-4 mb-8 sm:mb-12 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+        <div className="flex flex-row w-full justify-between sm:justify-start gap-2 sm:gap-4 mb-8 sm:mb-12" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           {(['memories', 'dupo', 'xurry'] as TabType[]).map((tab) => (
             <button
               key={tab}
@@ -280,7 +280,7 @@ export default function App() {
                   setActiveTab(tab);
                 }
               }}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest transition-all whitespace-nowrap border
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-2.5 sm:py-3 rounded-2xl sm:rounded-full text-[9px] sm:text-xs font-bold tracking-widest transition-all whitespace-nowrap border
                 ${tab === 'memories' ? 'uppercase' : ''}
                 ${activeTab === tab 
                   ? 'bg-bento-accent text-bento-bg border-bento-accent' 
@@ -288,10 +288,10 @@ export default function App() {
                 }
               `}
             >
-              {tab === 'memories' && <Heart className="w-4 h-4" />}
-              {tab === 'dupo' && <ImageIcon className="w-4 h-4" />}
-              {tab === 'xurry' && <ImageIcon className="w-4 h-4" />}
-              {tab === 'memories' ? 'Kỉ niệm chung' : tab === 'dupo' ? 'duPO' : 'xurry'}
+              {tab === 'memories' && <Heart className="w-3 h-3 sm:w-4 sm:h-4" />}
+              {tab === 'dupo' && <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />}
+              {tab === 'xurry' && <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />}
+              <span className="truncate">{tab === 'memories' ? 'Kỉ niệm chung' : tab === 'dupo' ? 'duPO' : 'xurry'}</span>
             </button>
           ))}
         </div>

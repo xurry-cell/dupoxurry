@@ -200,7 +200,7 @@ export default function App() {
             </div>
 
             <button 
-              onClick={openNewForm}
+              onClick={() => handleAuth(openNewForm, 'Thêm kỉ niệm mới')}
               className="group flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs uppercase tracking-widest font-bold bg-bento-accent text-bento-bg px-3 sm:px-6 py-2 sm:py-3 rounded-full hover:brightness-110 transition-all shadow-sm"
               id="add-memory-nav"
             >
@@ -349,7 +349,7 @@ export default function App() {
               <Heart className="w-12 h-12 text-bento-accent mx-auto mb-6 opacity-30" />
               <p className="font-serif italic text-3xl text-bento-text opacity-40">Chưa có kỉ niệm nào được lưu lại...</p>
               <button 
-                onClick={openNewForm}
+                onClick={() => handleAuth(openNewForm, 'Thêm kỉ niệm mới')}
                 className="mt-8 text-bento-text/40 hover:text-bento-text text-xs uppercase tracking-[0.3em] font-bold border-b border-bento-text/20 pb-1 pb-1 transition-all"
               >
                 Tạo kỉ niệm đầu tiên

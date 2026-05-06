@@ -17,7 +17,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X } from 'lucide-react';
+import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X, LayoutGrid, List } from 'lucide-react';
 import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
@@ -39,6 +39,7 @@ export default function App() {
   const [viewingMemory, setViewingMemory] = useState<DateMemory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [viewMode, setViewMode] = useState<'full' | 'compact'>('full');
   const [activeTab, setActiveTab] = useState<TabType>('memories');
   const [isAdmin, setIsAdmin] = useState(false);
   const [passwordModal, setPasswordModal] = useState<{isOpen: boolean, action: () => void, title: string} | null>(null);
@@ -257,13 +258,22 @@ export default function App() {
               lộn số rầu
             </div>
             {memories.length > 0 && activeTab === 'memories' && (
-              <button
-                onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                className="mt-6 flex items-center gap-2 text-xs uppercase tracking-widest font-bold bg-bento-card text-bento-accent border border-bento-border px-4 py-2 rounded-full hover:bg-bento-border transition-colors cursor-pointer"
-              >
-                <ArrowUpDown className="w-3 h-3" />
-                Sắp xếp: {sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}
-              </button>
+              <div className="mt-6 flex flex-col sm:flex-row items-center gap-2">
+                <button
+                  onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest font-bold bg-bento-card text-bento-accent border border-bento-border px-4 py-2 rounded-full hover:bg-bento-border transition-colors cursor-pointer"
+                >
+                  <ArrowUpDown className="w-3 h-3" />
+                  Sắp xếp: {sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}
+                </button>
+                <button
+                  onClick={() => setViewMode(prev => prev === 'full' ? 'compact' : 'full')}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest font-bold bg-bento-card text-bento-accent border border-bento-border px-4 py-2 rounded-full hover:bg-bento-border transition-colors cursor-pointer"
+                >
+                  {viewMode === 'full' ? <List className="w-3 h-3" /> : <LayoutGrid className="w-3 h-3" />}
+                  {viewMode === 'full' ? 'Gọn gàng' : 'Đầy đủ'}
+                </button>
+              </div>
             )}
           </motion.div>
         </header>
@@ -298,11 +308,11 @@ export default function App() {
 
         {/* Main Content Area */}
         {activeTab === 'memories' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className={viewMode === 'full' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
           {/* Welcome Card (Static Content for Bento Style) */}
           <motion.div 
             layout
-            className="sm:col-span-2 row-span-1 bg-bento-accent rounded-[32px] p-6 sm:p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden"
+            className={`${viewMode === 'full' ? 'sm:col-span-2' : 'md:col-span-2'} row-span-1 bg-bento-accent rounded-[32px] p-6 sm:p-8 flex flex-col justify-between border border-bento-accent relative overflow-hidden`}
           >
              <div className="relative z-10">
                <div className="text-[10px] uppercase tracking-widest font-bold text-bento-bg/50 mb-2">có lẽ anh không muốn đợi... anh muốn bên em</div>
@@ -328,14 +338,68 @@ export default function App() {
 
           <AnimatePresence mode="popLayout">
             {filteredMemories.map((memory) => (
-              <MemoryCard 
-                key={memory.id || 'new'} 
-                memory={memory} 
-                onDelete={handleDeleteMemory} 
-                onEdit={handleEditMemory}
-                onView={setViewingMemory}
-                isAdmin={isAdmin}
-              />
+              viewMode === 'full' ? (
+                <MemoryCard 
+                  key={memory.id || 'new'} 
+                  memory={memory} 
+                  onDelete={handleDeleteMemory} 
+                  onEdit={handleEditMemory}
+                  onView={setViewingMemory}
+                  isAdmin={isAdmin}
+                />
+              ) : (
+                <motion.div
+                  key={memory.id || 'new'}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  onClick={() => setViewingMemory(memory)}
+                  className="bg-bento-card border border-bento-border rounded-2xl p-3 flex items-center gap-4 cursor-pointer hover:border-bento-accent/50 group transition-all"
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/20 rounded-xl overflow-hidden flex-shrink-0 relative">
+                    {memory.mediaType === 'video' ? (
+                      <video src={memory.mediaUrls?.[0] || (memory as any).mediaUrl} className="w-full h-full object-cover" />
+                    ) : (
+                      <img 
+                        src={memory.mediaUrls?.[0] || (memory as any).mediaUrl} 
+                        alt={memory.title} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] sm:text-xs text-bento-muted font-bold uppercase tracking-widest mb-1">{memory.date}</div>
+                    <h3 className="text-sm sm:text-base font-serif italic text-bento-text truncate">{memory.title}</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditMemory(memory);
+                          }}
+                          className="p-2 text-bento-muted hover:text-bento-text transition-colors"
+                        >
+                          <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Bạn có chắc chắn muốn xóa kỷ niệm này?')) {
+                              handleDeleteMemory(memory.id);
+                            }
+                          }}
+                          className="p-2 text-bento-muted hover:text-rose-500 transition-colors"
+                        >
+                          <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              )
             ))}
           </AnimatePresence>
           

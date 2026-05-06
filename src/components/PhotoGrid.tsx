@@ -84,7 +84,7 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-2xl font-serif italic text-bento-text">
-          {category === 'dupo' ? 'Ảnh của Dupo' : 'Ảnh của Xurry'}
+          {category === 'dupo' ? 'Ảnh của duPO' : 'Ảnh của xurry'}
         </h3>
         
         <div>

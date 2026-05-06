@@ -17,7 +17,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon } from 'lucide-react';
+import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X } from 'lucide-react';
 import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
@@ -40,6 +40,10 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [activeTab, setActiveTab] = useState<TabType>('memories');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [passwordModal, setPasswordModal] = useState<{isOpen: boolean, action: () => void, title: string} | null>(null);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
 
   // 1. Connection Test
   useEffect(() => {
@@ -135,6 +139,27 @@ export default function App() {
 
   const latestMemoryWithMusic = memories.find(m => m.musicUrl);
 
+  const submitPassword = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (passwordInput === 'MakiYuta69') {
+      setIsAdmin(true);
+      if (passwordModal?.action) passwordModal.action();
+      setPasswordModal(null);
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  const handleAuth = (action: () => void, title: string) => {
+    if (isAdmin) {
+      action();
+    } else {
+      setPasswordModal({ isOpen: true, action, title });
+      setPasswordInput('');
+      setPasswordError(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -159,7 +184,7 @@ export default function App() {
             <div className="w-10 h-10 bg-bento-card rounded-2xl flex items-center justify-center shadow-sm border border-bento-border text-bento-accent">
               <Heart className="w-6 h-6 fill-current" />
             </div>
-            <span className="text-xl font-serif italic tracking-tight text-bento-text">Dupo Xurry</span>
+            <span className="text-xl font-serif italic tracking-tight text-bento-text">duPO xurry</span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
@@ -181,6 +206,19 @@ export default function App() {
             >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Thêm hẹn</span>
+            </button>
+            <button 
+              onClick={() => {
+                if (isAdmin) {
+                  setIsAdmin(false);
+                } else {
+                  handleAuth(() => setIsAdmin(true), 'Kích hoạt Edit Mode');
+                }
+              }}
+              className={`group flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs uppercase tracking-widest font-bold px-3 py-2 sm:py-3 rounded-full transition-all shadow-sm border ${isAdmin ? 'bg-rose-500 text-white border-rose-500' : 'bg-transparent text-bento-muted border-bento-border hover:text-bento-text'}`}
+            >
+              <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">{isAdmin ? 'Tắt Edit' : 'Edit'}</span>
             </button>
           </div>
         </div>
@@ -235,8 +273,15 @@ export default function App() {
           {(['memories', 'dupo', 'xurry'] as TabType[]).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap border
+              onClick={() => {
+                if ((tab === 'dupo' || tab === 'xurry') && !isAdmin) {
+                  handleAuth(() => setActiveTab(tab), `Truy cập kho ảnh ${tab === 'dupo' ? 'duPO' : 'xurry'}`);
+                } else {
+                  setActiveTab(tab);
+                }
+              }}
+              className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold tracking-widest transition-all whitespace-nowrap border
+                ${tab === 'memories' ? 'uppercase' : ''}
                 ${activeTab === tab 
                   ? 'bg-bento-accent text-bento-bg border-bento-accent' 
                   : 'bg-bento-card text-bento-muted border-bento-border hover:border-bento-accent/50 hover:text-bento-text'
@@ -246,7 +291,7 @@ export default function App() {
               {tab === 'memories' && <Heart className="w-4 h-4" />}
               {tab === 'dupo' && <ImageIcon className="w-4 h-4" />}
               {tab === 'xurry' && <ImageIcon className="w-4 h-4" />}
-              {tab === 'memories' ? 'Kỉ niệm chung' : tab}
+              {tab === 'memories' ? 'Kỉ niệm chung' : tab === 'dupo' ? 'duPO' : 'xurry'}
             </button>
           ))}
         </div>
@@ -289,6 +334,7 @@ export default function App() {
                 onDelete={handleDeleteMemory} 
                 onEdit={handleEditMemory}
                 onView={setViewingMemory}
+                isAdmin={isAdmin}
               />
             ))}
           </AnimatePresence>
@@ -339,13 +385,67 @@ export default function App() {
       />
 
       <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] uppercase tracking-widest text-white/20 font-bold">
-        <p>© 2026 DUPO XURRY. ALL RIGHTS RESERVED.</p>
+        <p>© 2026 duPO xurry. ALL RIGHTS RESERVED.</p>
         <div className="flex gap-8">
           <a href="#" className="hover:text-white transition-colors">Privacy</a>
           <a href="#" className="hover:text-white transition-colors">Terms</a>
           <a href="#" className="hover:text-white transition-colors">About</a>
         </div>
       </footer>
+
+      {/* Password Modal */}
+      <AnimatePresence>
+        {passwordModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-bento-card border border-bento-border p-6 sm:p-8 rounded-[32px] w-full max-w-sm relative shadow-xl"
+            >
+              <button 
+                onClick={() => setPasswordModal(null)}
+                className="absolute top-6 right-6 text-bento-muted hover:text-bento-text transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <h3 className="text-xl font-serif mb-2 text-bento-text">{passwordModal.title}</h3>
+              <p className="text-xs text-bento-muted mb-6">Vui lòng nhập mật khẩu để tiếp tục.</p>
+              
+              <form onSubmit={submitPassword}>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  autoFocus
+                  placeholder="Mật khẩu..."
+                  className="w-full bg-bento-bg border border-bento-border px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-bento-accent transition-colors text-bento-text placeholder:text-bento-muted/50 mb-2"
+                />
+                
+                {passwordError && (
+                  <p className="text-rose-500 text-[10px] uppercase tracking-widest font-bold mb-4">Mật khẩu không đúng</p>
+                )}
+                
+                <button
+                  type="submit"
+                  className="w-full mt-4 bg-bento-accent text-bento-bg py-3 rounded-xl text-xs uppercase tracking-widest font-bold hover:brightness-110 transition-all"
+                >
+                  Xác nhận
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { X, Plus, Image as ImageIcon, Video, Calendar as CalendarIcon, Loader2, 
 import { MediaType, DateMemory } from '../types';
 import { cn } from '../lib/utils';
 import { compressImage } from '../lib/imageCompressor';
+import { storage } from '../lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 interface MemoryFormProps {
   isOpen: boolean;
@@ -27,7 +29,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]); // Optional: to track raw files if needed. But we compress right away.
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   React.useEffect(() => {
     if (editingMemory) {
@@ -38,6 +40,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setMusicUrl(editingMemory.musicUrl || '');
       setMusicFile(null);
       setFileError('');
+      setUploadProgress(0);
     } else {
       setTitle('');
       setDate(new Date().toISOString().split('T')[0]);
@@ -46,6 +49,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setMusicUrl('');
       setMusicFile(null);
       setFileError('');
+      setUploadProgress(0);
     }
   }, [editingMemory, isOpen]);
 
@@ -78,7 +82,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       onClose();
     } catch (error) {
       console.error('Error uploading file or saving memory:', error);
-      alert('Có lỗi xảy ra khi lưu kỉ niệm hoặc xử lý file nhạc. Bạn có thể cần thiết lập Storage Firebase Rules.');
+      alert('Có lỗi xảy ra khi lưu kỉ niệm hoặc xử lý file. Bạn có thể cần kiểm tra Storage Firebase Rules.');
     } finally {
       setLoading(false);
     }
@@ -105,7 +109,6 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
         files.map(file => compressImage(file, 800))
       );
       setMediaUrls(prev => {
-        // Remove empty strings from array before appending new images
         const filtered = prev.filter(url => url.trim() !== '');
         return [...filtered, ...compressedImages];
       });
@@ -114,6 +117,54 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setFileError('Lỗi tải ảnh, vui lòng thử lại.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+      setFileError('Video quá lớn, tối đa 50MB.');
+      return;
+    }
+
+    setLoading(true);
+    setFileError('');
+    setUploadProgress(0);
+
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, `videos/${fileName}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error('Error uploading video:', error);
+          setFileError('Lỗi tải lên video. Bạn có thể cần chờ Quota hoặc thiết lập Firebase Storage Rules.');
+          setLoading(false);
+          setUploadProgress(0);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setMediaUrls(urls => {
+             const withoutEmpty = urls.filter(u => u.trim() !== '');
+             return [...withoutEmpty, downloadURL];
+          });
+          setLoading(false);
+          setUploadProgress(0);
+        }
+      );
+    } catch (error) {
+      console.error(error);
+      setFileError('Lỗi tải video, vui lòng thử lại.');
+      setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -219,7 +270,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
 
               <div className="space-y-3">
                 <label className="text-[10px] uppercase tracking-[0.2em] text-bento-muted font-bold px-1 block">
-                  {mediaType === 'image' ? 'Tải ảnh lên (Khuyến nghị)' : 'Media URLs (Video)'}
+                  {mediaType === 'image' ? 'Tải ảnh lên (Khuyến nghị)' : 'Tải video lên'}
                 </label>
                 
                 {mediaType === 'image' ? (
@@ -251,35 +302,36 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
                     </label>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {mediaUrls.map((url, index) => (
-                      <div key={index} className="flex gap-2">
-                        <input
-                          required
-                          type="url"
-                          value={url}
-                          onChange={(e) => updateMediaUrl(index, e.target.value)}
-                          placeholder="https://example.com/video.mp4"
-                          className="flex-1 bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all placeholder:text-bento-muted shadow-sm"
-                        />
-                        {mediaUrls.length > 1 && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      {mediaUrls.map((url, index) => url.trim() !== '' ? (
+                        <div key={index} className="relative aspect-video rounded-xl overflow-hidden group border border-bento-border">
+                          <video src={url} className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => removeMediaUrl(index)}
-                            className="p-4 bg-bento-card border border-bento-border rounded-2xl text-rose-500 hover:bg-rose-50 transition-all shadow-sm"
+                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3 h-3" />
                           </button>
-                        )}
+                        </div>
+                      ) : null)}
+                    </div>
+                    {uploadProgress > 0 && uploadProgress < 100 && (
+                      <div className="w-full bg-bento-card border border-bento-border rounded-full h-2 mb-4 overflow-hidden">
+                        <div className="bg-bento-accent h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
                       </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addMediaUrl}
-                      className="w-full py-3 border-2 border-dashed border-bento-border rounded-2xl text-bento-muted hover:border-bento-accent hover:text-bento-text transition-all text-sm font-bold uppercase tracking-widest"
-                    >
-                      + Thêm video link
-                    </button>
+                    )}
+                    <label className="w-full py-4 border-2 border-dashed border-bento-border rounded-2xl text-bento-muted hover:border-bento-accent hover:text-bento-text transition-all text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer bg-bento-card">
+                      <Upload className="w-4 h-4" />
+                      Tải video từ máy
+                      <input 
+                        type="file" 
+                        accept="video/*" 
+                        className="hidden" 
+                        onChange={handleVideoUpload} 
+                      />
+                    </label>
                   </div>
                 )}
               </div>

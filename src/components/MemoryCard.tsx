@@ -10,9 +10,10 @@ interface MemoryCardProps {
   onDelete: (id: string) => void | Promise<void>;
   onEdit: (memory: DateMemory) => void;
   onView: (memory: DateMemory) => void;
+  isAdmin: boolean;
 }
 
-export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onDelete, onEdit, onView }) => {
+export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onDelete, onEdit, onView, isAdmin }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
   const isVideo = memory.mediaType === 'video';
   const displayUrl = memory.mediaUrls?.[0] || (memory as any).mediaUrl;
@@ -99,34 +100,32 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onDelete, onEdit
           {memory.title}
         </h3>
         
-        <div className="flex items-center justify-between mt-auto">
-          <p className="text-[10px] uppercase tracking-widest text-bento-muted font-bold">
-            {memory.mediaType} memory
-          </p>
-          
-          <div className="flex gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(memory);
-              }}
-              className="p-2 text-bento-muted hover:text-bento-text transition-all duration-300"
-              aria-label="Edit memory"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsConfirmingDelete(true);
-              }}
-              className="p-2 text-bento-muted hover:text-rose-500 transition-all duration-300"
-              aria-label="Delete memory"
-              id={`delete-${memory.id}`}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+        <div className="flex items-center justify-end mt-auto">
+          {isAdmin && (
+            <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(memory);
+                }}
+                className="p-2 text-bento-muted hover:text-bento-text transition-all duration-300"
+                aria-label="Edit memory"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsConfirmingDelete(true);
+                }}
+                className="p-2 text-bento-muted hover:text-rose-500 transition-all duration-300"
+                aria-label="Delete memory"
+                id={`delete-${memory.id}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

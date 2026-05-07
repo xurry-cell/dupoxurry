@@ -16,6 +16,9 @@ interface MemoryFormProps {
     mediaUrls: string[]; 
     mediaType: MediaType;
     musicUrl?: string;
+    author: 'duPO' | 'xurry';
+    songTitle?: string;
+    note?: string;
   }) => Promise<void>;
   editingMemory?: DateMemory | null;
 }
@@ -25,8 +28,9 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [mediaType, setMediaType] = useState<MediaType>('image');
-  const [musicUrl, setMusicUrl] = useState('');
-  const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [author, setAuthor] = useState<'duPO' | 'xurry'>('xurry');
+  const [songTitle, setSongTitle] = useState('');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -37,8 +41,9 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setDate(editingMemory.date);
       setMediaUrls(editingMemory.mediaUrls || [(editingMemory as any).mediaUrl].filter(Boolean) || []);
       setMediaType(editingMemory.mediaType);
-      setMusicUrl(editingMemory.musicUrl || '');
-      setMusicFile(null);
+      setAuthor(editingMemory.author || 'xurry');
+      setSongTitle(editingMemory.songTitle || '');
+      setNote(editingMemory.note || '');
       setFileError('');
       setUploadProgress(0);
     } else {
@@ -46,8 +51,9 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setDate(new Date().toISOString().split('T')[0]);
       setMediaUrls([]);
       setMediaType('image');
-      setMusicUrl('');
-      setMusicFile(null);
+      setAuthor('xurry'); 
+      setSongTitle('');
+      setNote('');
       setFileError('');
       setUploadProgress(0);
     }
@@ -61,24 +67,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
 
     setLoading(true);
     try {
-      let finalMusicUrl = musicUrl;
-      
-      if (musicFile) {
-        if (musicFile.size > 500 * 1024) {
-          setFileError('File nhạc quá lớn! Do sử dụng Database miễn phí nên chỉ hỗ trợ file dưới 500KB. Vui lòng cắt nhạc ngắn hơn (tầm 15-30s) hoặc sử dụng link nhạc gốc nhé!');
-          setLoading(false);
-          return;
-        }
-
-        finalMusicUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(musicFile);
-        });
-      }
-
-      await onSubmit({ title, date, mediaUrls: validUrls, mediaType, musicUrl: finalMusicUrl });
+      await onSubmit({ title, date, mediaUrls: validUrls, mediaType, author, songTitle, note });
       onClose();
     } catch (error) {
       console.error('Error uploading file or saving memory:', error);
@@ -338,36 +327,51 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
 
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.2em] text-bento-muted font-bold px-1">
-                  Nhạc buổi hẹn (File âm thanh)
+                  Ai là người thêm?
                 </label>
-                {fileError && (
-                  <div className="bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-2xl text-sm font-medium">
-                    {fileError}
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  {(['duPO', 'xurry'] as const).map((person) => (
+                    <button
+                      key={person}
+                      type="button"
+                      onClick={() => setAuthor(person)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl border transition-all uppercase text-[10px] tracking-widest font-bold shadow-sm",
+                        author === person
+                          ? "bg-bento-accent text-bento-text border-bento-accent"
+                          : "bg-bento-card text-bento-muted border-bento-border hover:border-bento-accent"
+                      )}
+                    >
+                      {person}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-bento-muted font-bold px-1">
+                  Nhạc buổi hẹn (Tên bài hát)
+                </label>
                 <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setMusicFile(file);
-                    if (file && file.size > 500 * 1024) {
-                      setFileError('File quá lớn (tối đa 500KB). Vui lòng chọn file nhẹ hơn hoặc dùng link nhạc (như Drive, Soundcloud, Zingmp3...).');
-                    } else {
-                      setFileError('');
-                    }
-                  }}
-                  className="w-full bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-bento-accent file:text-bento-bg hover:file:brightness-110 file:cursor-pointer"
+                  type="text"
+                  value={songTitle}
+                  onChange={(e) => setSongTitle(e.target.value)}
+                  placeholder="Ví dụ: Perfect - Ed Sheeran..."
+                  className="w-full bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all placeholder:text-bento-muted shadow-sm"
                 />
-                {!musicFile && (
-                  <input
-                    type="url"
-                    value={musicUrl}
-                    onChange={(e) => setMusicUrl(e.target.value)}
-                    placeholder="Hoặc gắn link nhạc (Optional)..."
-                    className="w-full mt-2 bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all placeholder:text-bento-muted shadow-sm"
-                  />
-                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-bento-muted font-bold px-1">
+                  Lời muốn nói (Ghi chú/Cảm nhận)
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Nhập cảm nhận của bạn về buổi hẹn này..."
+                  rows={3}
+                  className="w-full bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all placeholder:text-bento-muted shadow-sm resize-none"
+                />
               </div>
 
               <button

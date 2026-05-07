@@ -41,9 +41,22 @@
           "type": "string",
           "format": "date-time",
           "description": "When the record was last updated."
+        },
+        "author": {
+          "type": "string",
+          "enum": ["duPO", "xurry"],
+          "description": "Who added the memory."
+        },
+        "songTitle": {
+          "type": "string",
+          "description": "Optional title of the song for the memory."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional note or feeling from the author."
         }
       },
-      "required": ["title", "date", "mediaUrls", "mediaType", "userId", "createdAt"]
+      "required": ["title", "date", "mediaUrls", "mediaType", "userId", "createdAt", "author"]
     },
     "PersonalPhoto": {
       "title": "Personal Photo",

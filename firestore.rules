@@ -13,13 +13,14 @@ service cloud.firestore {
     function existing() { return resource.data; }
 
     function isValidMemory(incomingData) {
-      return incomingData.keys().hasAll(['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt']) &&
+      return incomingData.keys().hasAll(['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt', 'author']) &&
         incomingData.title is string && incomingData.title.size() <= 200 &&
         incomingData.date is string && incomingData.date.size() <= 50 &&
         incomingData.mediaUrls is list && incomingData.mediaUrls.size() <= 20 &&
         (incomingData.mediaUrls.size() == 0 || incomingData.mediaUrls[0] is string) &&
         incomingData.mediaType is string && incomingData.mediaType.matches('^(image|video)$') &&
         incomingData.userId == 'guest-user' &&
+        incomingData.author in ['duPO', 'xurry'] &&
         incomingData.createdAt is timestamp &&
         (
           !('musicUrl' in incomingData) || 
@@ -28,6 +29,14 @@ service cloud.firestore {
         (
           !('updatedAt' in incomingData) || 
           (incomingData.updatedAt is timestamp)
+        ) &&
+        (
+          !('songTitle' in incomingData) || 
+          (incomingData.songTitle is string && incomingData.songTitle.size() <= 200)
+        ) &&
+        (
+          !('note' in incomingData) || 
+          (incomingData.note is string && incomingData.note.size() <= 5000)
         );
     }
 
@@ -43,10 +52,12 @@ service cloud.firestore {
     }
     
     function hasValidCreateKeys(incomingData) {
-      let baseKeys = ['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt'];
+      let baseKeys = ['title', 'date', 'mediaUrls', 'mediaType', 'userId', 'createdAt', 'author'];
       let isMusicSent = 'musicUrl' in incomingData;
       let isUpdatedAtSent = 'updatedAt' in incomingData;
-      let expectedSize = 6 + (isMusicSent ? 1 : 0) + (isUpdatedAtSent ? 1 : 0);
+      let isSongTitleSent = 'songTitle' in incomingData;
+      let isNoteSent = 'note' in incomingData;
+      let expectedSize = 7 + (isMusicSent ? 1 : 0) + (isUpdatedAtSent ? 1 : 0) + (isSongTitleSent ? 1 : 0) + (isNoteSent ? 1 : 0);
       
       return incomingData.keys().hasAll(baseKeys) && incomingData.keys().size() == expectedSize;
     }
@@ -94,7 +105,7 @@ service cloud.firestore {
         
       allow update: if isValidId(memoryId) &&
         isValidMemory(incoming()) &&
-        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'date', 'mediaUrls', 'mediaType', 'musicUrl', 'updatedAt']) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'date', 'mediaUrls', 'mediaType', 'musicUrl', 'updatedAt', 'author', 'songTitle', 'note']) &&
         incoming().userId == existing().userId &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time;

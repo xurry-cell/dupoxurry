@@ -17,7 +17,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X, LayoutGrid, List } from 'lucide-react';
+import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X, LayoutGrid, List, Mars, Venus } from 'lucide-react';
 import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
@@ -42,6 +42,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'full' | 'compact'>('full');
   const [activeTab, setActiveTab] = useState<TabType>('memories');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [passwordModal, setPasswordModal] = useState<{isOpen: boolean, action: () => void, title: string} | null>(null);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
@@ -82,12 +83,23 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleSubmitMemory = async (data: { 
     title: string; 
     date: string; 
     mediaUrls: string[]; 
     mediaType: MediaType;
     musicUrl?: string;
+    author: 'duPO' | 'xurry';
+    songTitle?: string;
+    note?: string;
   }) => {
     const path = 'memories';
     try {
@@ -179,8 +191,12 @@ export default function App() {
       <AtmosphericBackground />
       
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-8 bg-bento-bg/80 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none border-b border-bento-border/50 sm:border-none duration-300">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
+        scrolled 
+          ? 'py-3 sm:py-4 bg-black/40 backdrop-blur-xl border-b border-white/5 shadow-2xl' 
+          : 'py-4 sm:py-8 bg-bento-bg/80 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none border-b border-bento-border/50 sm:border-none'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-bento-card rounded-2xl flex items-center justify-center shadow-sm border border-bento-border text-bento-accent">
               <Heart className="w-6 h-6 fill-current" />
@@ -369,7 +385,14 @@ export default function App() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[10px] sm:text-xs text-bento-muted font-bold uppercase tracking-widest mb-1">{memory.date}</div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="text-[10px] sm:text-xs text-bento-muted font-bold uppercase tracking-widest">{memory.date}</div>
+                      {memory.author === 'duPO' ? (
+                        <Mars className="w-3 h-3 text-blue-500" />
+                      ) : (
+                        <Venus className="w-3 h-3 text-pink-500" />
+                      )}
+                    </div>
                     <h3 className="text-sm sm:text-base font-serif italic text-bento-text truncate">{memory.title}</h3>
                   </div>
                   <div className="flex items-center gap-2">

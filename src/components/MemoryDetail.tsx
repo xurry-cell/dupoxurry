@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calendar, Video, Image as ImageIcon, Music, Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import { X, Calendar, Video, Image as ImageIcon, Music, Volume2, VolumeX, Play, Pause, Mars, Venus } from 'lucide-react';
 import { DateMemory } from '../types';
 import { format } from 'date-fns';
 
@@ -74,6 +74,10 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
                     <span className="bg-bento-bg px-4 py-2 rounded-full text-xs font-bold text-bento-text uppercase tracking-wider flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       {format(new Date(memory.date), 'MMMM dd, yyyy')}
+                    </span>
+                    <span className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${memory.author === 'duPO' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-pink-500/10 text-pink-500 border border-pink-500/20'}`}>
+                      {memory.author === 'duPO' ? <Mars className="w-4 h-4" /> : <Venus className="w-4 h-4" />}
+                      {memory.author || 'xurry'}
                     </span>
                     {memory.musicUrl && (
                       <div className="flex items-center gap-2">

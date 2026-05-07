@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Calendar, Trash2, Edit2, Music, Video, Image as ImageIcon, Heart } from 'lucide-react';
+import { Calendar, Trash2, Edit2, Music, Video, Image as ImageIcon, Heart, Mars, Venus } from 'lucide-react';
 import { DateMemory } from '../types';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
@@ -32,17 +32,25 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onDelete, onEdit
     >
       {/* Date Header */}
       <div className="flex justify-between items-start mb-4 relative z-10">
-        <span className="bg-bento-bg/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold text-bento-text uppercase tracking-wider">
-          {format(new Date(memory.date), 'MMMM dd, yyyy')}
-        </span>
+        <div className="flex flex-col gap-2">
+          <span className="bg-bento-bg/80 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold text-bento-text uppercase tracking-wider w-fit">
+            {format(new Date(memory.date), 'MMMM dd, yyyy')}
+          </span>
+        </div>
         <div className="flex gap-2">
           {memory.musicUrl && (
             <div className="w-8 h-8 bg-bento-bg rounded-full flex items-center justify-center shadow-sm text-bento-accent">
               <Music className="w-4 h-4" />
             </div>
           )}
-          <div className="w-8 h-8 bg-bento-bg rounded-full flex items-center justify-center shadow-sm text-bento-accent">
-            {isVideo ? <Video className="w-4 h-4" /> : <Heart className="w-4 h-4 fill-current" />}
+          <div className={`w-8 h-8 bg-bento-bg rounded-full flex items-center justify-center shadow-sm ${
+            !isVideo ? (memory.author === 'duPO' ? 'text-blue-500' : 'text-pink-500') : 'text-bento-accent'
+          }`}>
+            {isVideo ? (
+              <Video className="w-4 h-4" />
+            ) : (
+              memory.author === 'duPO' ? <Mars className="w-4 h-4" /> : <Venus className="w-4 h-4" />
+            )}
           </div>
         </div>
       </div>

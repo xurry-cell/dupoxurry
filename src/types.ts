@@ -12,6 +12,9 @@ export interface DateMemory {
   userId: string;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+  author: 'duPO' | 'xurry';
+  songTitle?: string;
+  note?: string;
 }
 
 export interface PersonalPhoto {

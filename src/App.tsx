@@ -47,6 +47,20 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
 
+  const TEST_MEMORY: DateMemory = {
+    id: 'test-memory-id',
+    title: 'Kỉ niệm Test (Chỉ xem được ở Edit Mode)',
+    date: new Date().toISOString().split('T')[0],
+    mediaUrls: ['https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop'],
+    mediaType: 'image' as MediaType,
+    author: 'duPO',
+    userId: 'guest-user',
+    createdAt: { seconds: 0, nanoseconds: 0 } as any,
+    songTitle: 'Perfect - Ed Sheeran',
+    note: 'Đây là kỉ niệm mô phỏng để bạn kiểm tra giao diện.',
+    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' // Dummy actual audio for UI testing
+  };
+
   // 1. Connection Test
   useEffect(() => {
     async function testConnection() {
@@ -142,7 +156,9 @@ export default function App() {
     setIsFormOpen(true);
   };
 
-  const filteredMemories = memories
+  const allMemories = isAdmin ? [TEST_MEMORY, ...memories] : memories;
+
+  const filteredMemories = allMemories
     .filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
       const dateA = new Date(a.date).getTime();
@@ -396,7 +412,7 @@ export default function App() {
                     <h3 className="text-sm sm:text-base font-serif italic text-bento-text truncate">{memory.title}</h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isAdmin && (
+                    {isAdmin && memory.id !== 'test-memory-id' && (
                       <>
                         <button
                           onClick={(e) => {

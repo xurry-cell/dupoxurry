@@ -31,6 +31,8 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
   const [author, setAuthor] = useState<'duPO' | 'xurry'>('xurry');
   const [songTitle, setSongTitle] = useState('');
   const [note, setNote] = useState('');
+  const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [musicUrl, setMusicUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -44,6 +46,8 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setAuthor(editingMemory.author || 'xurry');
       setSongTitle(editingMemory.songTitle || '');
       setNote(editingMemory.note || '');
+      setMusicUrl(editingMemory.musicUrl || '');
+      setMusicFile(null);
       setFileError('');
       setUploadProgress(0);
     } else {
@@ -54,6 +58,8 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
       setAuthor('xurry'); 
       setSongTitle('');
       setNote('');
+      setMusicUrl('');
+      setMusicFile(null);
       setFileError('');
       setUploadProgress(0);
     }
@@ -67,7 +73,24 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
 
     setLoading(true);
     try {
-      await onSubmit({ title, date, mediaUrls: validUrls, mediaType, author, songTitle, note });
+      let finalMusicUrl = musicUrl;
+
+      if (musicFile) {
+        if (musicFile.size > 700 * 1024) { // 700KB limit to stay under 1MB after base64
+          setFileError('File nhạc quá lớn (tối đa 700KB để đảm bảo lưu trữ).');
+          setLoading(false);
+          return;
+        }
+
+        finalMusicUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(musicFile);
+        });
+      }
+
+      await onSubmit({ title, date, mediaUrls: validUrls, mediaType, author, songTitle, note, musicUrl: finalMusicUrl });
       onClose();
     } catch (error) {
       console.error('Error uploading file or saving memory:', error);
@@ -359,6 +382,42 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
                   placeholder="Ví dụ: Perfect - Ed Sheeran..."
                   className="w-full bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all placeholder:text-bento-muted shadow-sm"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-bento-muted font-bold px-1">
+                  Tải tệp âm nhạc (.mp3, .m4a)
+                </label>
+                <div className="space-y-2">
+                  {fileError && (
+                    <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 px-4 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider">
+                      {fileError}
+                    </div>
+                  )}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        if (file && file.size > 700 * 1024) {
+                          setFileError('File quá lớn (tối đa 700KB).');
+                          setMusicFile(null);
+                        } else {
+                          setFileError('');
+                          setMusicFile(file);
+                        }
+                      }}
+                      className="w-full bg-bento-card border border-bento-border rounded-2xl px-5 py-4 text-bento-text focus:outline-none focus:border-bento-accent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-bento-accent file:text-bento-bg hover:file:brightness-110 file:cursor-pointer"
+                    />
+                    {musicUrl && !musicFile && (
+                      <div className="mt-2 flex items-center gap-2 px-4 py-2 bg-bento-accent/5 border border-bento-accent/10 rounded-xl">
+                        <div className="w-2 h-2 rounded-full bg-bento-accent animate-pulse" />
+                        <span className="text-[10px] text-bento-accent font-bold uppercase tracking-widest">Đã có file nhạc cũ</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -11,4 +11,10 @@
   --color-bento-accent: #11ff9d;
   --color-bento-border: #142323;
   --color-bento-card: #0c1415;
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  --animate-spin-slow: spin-slow 3s linear infinite;
 }

@@ -28,7 +28,7 @@ export default function Login({ onLogin, error }: LoginProps) {
             transition={{ delay: 0.5 }}
             className="text-6xl font-serif italic text-white tracking-tight"
           >
-            Dupo Xurry
+            duPO xurry
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}

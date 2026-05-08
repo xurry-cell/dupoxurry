@@ -17,7 +17,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X, LayoutGrid, List, Mars, Venus } from 'lucide-react';
+import { Plus, Heart, Search, Music, ArrowUpDown, Image as ImageIcon, Edit2, X, LayoutGrid, List, Mars, Venus, Calendar } from 'lucide-react';
 import { db } from './lib/firebase';
 import { DateMemory, MediaType, OperationType } from './types';
 import { handleFirestoreError } from './lib/error-handler';
@@ -27,6 +27,7 @@ import MemoryForm from './components/MemoryForm';
 import MemoryDetail from './components/MemoryDetail';
 import PhotoGrid from './components/PhotoGrid';
 import ProfileCover from './components/ProfileCover';
+import { CalendarView } from './components/CalendarView';
 import { compressImage } from './lib/imageCompressor';
 
 type TabType = 'memories' | 'dupo' | 'xurry';
@@ -39,7 +40,7 @@ export default function App() {
   const [viewingMemory, setViewingMemory] = useState<DateMemory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
-  const [viewMode, setViewMode] = useState<'full' | 'compact'>('full');
+  const [viewMode, setViewMode] = useState<'full' | 'compact' | 'calendar'>('full');
   const [activeTab, setActiveTab] = useState<TabType>('memories');
   const [isAdmin, setIsAdmin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -299,11 +300,20 @@ export default function App() {
                   Sắp xếp: {sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}
                 </button>
                 <button
-                  onClick={() => setViewMode(prev => prev === 'full' ? 'compact' : 'full')}
+                  onClick={() => setViewMode(prev => {
+                    if (prev === 'full') return 'compact';
+                    if (prev === 'compact') return 'calendar';
+                    return 'full';
+                  })}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest font-bold bg-bento-card text-bento-accent border border-bento-border px-4 py-2 rounded-full hover:bg-bento-border transition-colors cursor-pointer"
                 >
-                  {viewMode === 'full' ? <List className="w-3 h-3" /> : <LayoutGrid className="w-3 h-3" />}
-                  {viewMode === 'full' ? 'Gọn gàng' : 'Đầy đủ'}
+                  {viewMode === 'full' && <List className="w-3 h-3" />}
+                  {viewMode === 'compact' && <Calendar className="w-3 h-3" />}
+                  {viewMode === 'calendar' && <LayoutGrid className="w-3 h-3" />}
+                  
+                  {viewMode === 'full' && 'Gọn gàng'}
+                  {viewMode === 'compact' && 'Lịch'}
+                  {viewMode === 'calendar' && 'Đầy đủ'}
                 </button>
               </div>
             )}
@@ -340,6 +350,12 @@ export default function App() {
 
         {/* Main Content Area */}
         {activeTab === 'memories' ? (
+          viewMode === 'calendar' ? (
+            <CalendarView 
+              memories={filteredMemories} 
+              onViewMemory={setViewingMemory} 
+            />
+          ) : (
           <div className={viewMode === 'full' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
           {/* Welcome Card (Static Content for Bento Style) */}
           <motion.div 
@@ -460,6 +476,7 @@ export default function App() {
             </motion.div>
           )}
         </div>
+          )
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

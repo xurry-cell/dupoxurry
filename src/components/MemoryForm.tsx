@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, Image as ImageIcon, Video, Calendar as CalendarIcon, Loader2, Upload } from 'lucide-react';
+import { X, Plus, Image as ImageIcon, Video, Calendar as CalendarIcon, Loader2, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 import { MediaType, DateMemory } from '../types';
 import { cn } from '../lib/utils';
 import { compressImage } from '../lib/imageCompressor';
@@ -36,6 +36,7 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   React.useEffect(() => {
     if (editingMemory) {
@@ -108,6 +109,38 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
   };
   const removeMediaUrl = (index: number) => {
     setMediaUrls(mediaUrls.filter((_, i) => i !== index));
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", index.toString());
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setMediaUrls(prev => {
+      const newUrls = [...prev];
+      const draggedUrl = newUrls[draggedIndex];
+      newUrls.splice(draggedIndex, 1);
+      newUrls.splice(index, 0, draggedUrl);
+      return newUrls;
+    });
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,12 +322,23 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-2">
                       {mediaUrls.map((url, index) => url.trim() !== '' ? (
-                        <div key={index} className="relative aspect-square rounded-xl overflow-hidden group border border-bento-border">
-                          <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                        <div 
+                          key={url + index} 
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragEnter={(e) => handleDragEnter(e, index)}
+                          onDragOver={handleDragOver}
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            "relative aspect-square rounded-xl overflow-hidden group border cursor-move transition-all duration-200",
+                            draggedIndex === index ? "opacity-50 scale-95 border-bento-accent z-10" : "border-bento-border hover:border-bento-accent/50"
+                          )}
+                        >
+                          <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover pointer-events-none" />
                           <button
                             type="button"
                             onClick={() => removeMediaUrl(index)}
-                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -317,12 +361,23 @@ export default function MemoryForm({ isOpen, onClose, onSubmit, editingMemory }:
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-2">
                       {mediaUrls.map((url, index) => url.trim() !== '' ? (
-                        <div key={index} className="relative aspect-video rounded-xl overflow-hidden group border border-bento-border">
-                          <video src={url} className="w-full h-full object-cover" />
+                        <div 
+                          key={url + index} 
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragEnter={(e) => handleDragEnter(e, index)}
+                          onDragOver={handleDragOver}
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            "relative aspect-video rounded-xl overflow-hidden group border cursor-move transition-all duration-200",
+                            draggedIndex === index ? "opacity-50 scale-95 border-bento-accent z-10" : "border-bento-border hover:border-bento-accent/50"
+                          )}
+                        >
+                          <video src={url} className="w-full h-full object-cover pointer-events-none" />
                           <button
                             type="button"
                             onClick={() => removeMediaUrl(index)}
-                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
+                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20"
                           >
                             <X className="w-3 h-3" />
                           </button>

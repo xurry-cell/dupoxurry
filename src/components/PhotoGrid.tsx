@@ -15,7 +15,7 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
   const [photos, setPhotos] = useState<PersonalPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<PersonalPhoto | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="break-inside-avoid mb-6 bg-bento-card rounded-2xl overflow-hidden border border-bento-border shadow-sm group relative cursor-pointer"
-                onClick={() => setSelectedPhoto(photo.imageUrl)}
+                onClick={() => setSelectedPhoto(photo)}
               >
                 <img 
                   src={photo.imageUrl} 
@@ -171,19 +171,32 @@ export default function PhotoGrid({ category }: PhotoGridProps) {
               onClick={() => setSelectedPhoto(null)}
               className="absolute top-4 right-4 md:top-8 md:right-8 z-[110] p-3 md:p-4 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md transition-all"
             >
-              <Trash2 className="w-5 h-5 md:w-6 md:h-6 hidden" /> {/* Placeholder just to align with other styles or we can use X, I'll use X */}
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 md:w-6 md:h-6"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
-            <motion.img
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              src={selectedPhoto}
-              alt="Full size view"
-              className="max-w-full max-h-[90vh] object-contain rounded-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="relative flex flex-col items-center max-w-full">
+              <motion.img
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                src={selectedPhoto.imageUrl}
+                alt={selectedPhoto.title || "Full size view"}
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {selectedPhoto.title && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 px-8 py-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl text-center max-w-[90vw]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="text-white text-lg md:text-xl font-serif drop-shadow-lg leading-relaxed">
+                    {selectedPhoto.title}
+                  </p>
+                </motion.div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

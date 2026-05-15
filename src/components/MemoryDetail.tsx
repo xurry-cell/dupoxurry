@@ -90,10 +90,15 @@ export default function MemoryDetail({ memory, onClose }: MemoryDetailProps) {
                           <Disc className="w-5 h-5" />
                         </div>
                         
-                        <div className="min-w-0 flex items-center pr-2">
-                          <span className={`${isPlaying ? 'text-bento-accent' : 'text-bento-text'} text-sm sm:text-base font-serif italic truncate max-w-[180px] md:max-w-[350px] leading-tight transition-colors duration-300`}>
-                            {memory.songTitle || 'Bản nhạc kỷ niệm'}
-                          </span>
+                        <div className="w-[140px] md:w-[200px] overflow-hidden flex items-center relative">
+                          <div className={`flex whitespace-nowrap w-max animate-scroll-text ${isPlaying ? '[animation-play-state:running]' : '[animation-play-state:paused]'}`}>
+                            <span className={`${isPlaying ? 'text-bento-accent' : 'text-bento-text'} shrink-0 text-sm sm:text-base font-serif italic pr-8 leading-tight transition-colors duration-300 inline-block`}>
+                              {memory.songTitle || 'Bản nhạc kỷ niệm'}
+                            </span>
+                            <span aria-hidden="true" className={`${isPlaying ? 'text-bento-accent' : 'text-bento-text'} shrink-0 text-sm sm:text-base font-serif italic pr-8 leading-tight transition-colors duration-300 inline-block`}>
+                              {memory.songTitle || 'Bản nhạc kỷ niệm'}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-1 ml-2 border-l border-bento-border pl-2">

@@ -17,4 +17,10 @@
     to { transform: rotate(360deg); }
   }
   --animate-spin-slow: spin-slow 3s linear infinite;
+
+  @keyframes scroll-text {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  --animate-scroll-text: scroll-text 8s linear infinite;
 }
